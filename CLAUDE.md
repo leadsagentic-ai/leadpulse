@@ -204,40 +204,45 @@ Every session, in order:
 ```
 Last Updated:    March 2026
 Current Phase:   Phase 1 — MVP
-Current Sprint:  Sprint 2 — Signal Collection
+Current Sprint:  Sprint 3 — Multi-Platform Signals
 
+Sprint 2 Status: ✅ COMPLETE (commit 8ad90f8)
 Sprint 1 Status: ✅ COMPLETE (commit ec20874)
 Sprint 0 Status: ✅ COMPLETE
 
-Sprint 1 completed tasks:
-  S1-T1 ✅ DB migration generated (apps/api/src/db/migrations/0000_initial-schema.sql)
-           13 tables. NOTE: db:migrate needs real Neon DATABASE_URL in .dev.vars to run.
-  S1-T2 ✅ auth.middleware.ts + rate-limit.middleware.ts + cors.middleware.ts
-           17 total tests, all pass.
-  S1-T3 ✅ campaign.service.ts + campaigns.handler.ts + campaigns.routes.ts
-           Full CRUD; delete = soft delete (status: 'archived').
-  S1-T4 ✅ user.service.ts + auth.routes.ts
-           POST /api/v1/auth/login (upsert) + GET /api/v1/auth/me. index.ts updated.
-  S1-T5 ✅ apps/web/src/lib/auth.ts — signInWithGoogle() now calls POST /api/v1/auth/login
-           apps/web/src/routes/login.tsx — navigates to /dashboard after sign-in
+Sprint 2 completed tasks:
+  S2-T1 ✅ reddit.service.ts — OAuth2 token (btoa Basic auth) + searchRedditPosts with Upstash rate limit
+           RedditPost interface: id, title, selftext, url, author, created_utc, score, num_comments, subreddit, permalink
+  S2-T2 ✅ deduplication.service.ts (isDuplicate + markAsSeen, 7-day TTL, key: leadpulse:dedup:{url})
+           signal-processing.queue.ts — SignalProcessingMessage interface + handleSignalQueue consumer
+  S2-T3 ✅ signal-poller.ts — scheduled worker, polls all active Reddit campaigns every 30 min
+           index.ts — updated to export { fetch, scheduled, queue } (Cloudflare Workers 3-export pattern)
+  S2-T4 ✅ lead.service.ts (createLeadFromSignal, getLeadById, listLeads, patchLeadStatus)
+           leads.handler.ts + leads.routes.ts — GET /leads, GET /leads/:id, PATCH /leads/:id/status
 
-Completed sprints: Sprint 0, Sprint 1
+Sprint 2 notes:
+  - Lead records created with stub classification: intentType='BUYING_INTENT', confidence='0.000'
+    Sprint 4 will wire real AI classification before lead creation
+  - DB migration (0000_initial-schema.sql) applied to Neon DB in pre-Sprint-2 setup
+  - 36 tests passing, typecheck clean
 
-Sprint 1 known issues / pending:
-  - db:migrate hasn't run against real Neon DB (placeholder DATABASE_URL in .dev.vars)
-  - Need real FIREBASE_WEB_API_KEY and UPSTASH_* values in .dev.vars for local dev
+Completed sprints: Sprint 0, Sprint 1, Sprint 2
+
+Sprint 2 known issues / pending:
+  - Need real REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET in .dev.vars for local testing
+  - Lead classification is stub (Sprint 4 will replace with Cloudflare AI)
   - No E2E tests yet (Playwright) — deferred to post-MVP
 
-Next sprint (Sprint 2 — Signal Collection):
-  See SPRINT_PLAN.md → Sprint 2 for task list
-  Key tasks: Reddit OAuth2, search service, signal queue, deduplication, lead records
-  Start with S2-T1: Reddit OAuth2 + search endpoints
+Next sprint (Sprint 3 — Multi-Platform Signals):
+  See SPRINT_PLAN.md → Sprint 3 for task list
+  Key tasks: Bluesky signal service, Threads signal service, Mastodon signal service
+  Start with S3-T1: Bluesky AT Protocol search
 
 Notes for next session:
   - Read CODING_PATTERNS.md before writing any new services
   - Keep all services returning Result<T, AppError> (neverthrow)
-  - Cloudflare Queues binding required for S2-T3 (signal-queue producer)
-  - Add REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET to wrangler.toml [vars] section
+  - Mirror the reddit.service.ts pattern for all new platform services
+  - Platform services go in apps/api/src/services/signals/
 ```
 
 ---
