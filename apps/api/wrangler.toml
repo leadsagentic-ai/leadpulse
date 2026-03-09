@@ -1,0 +1,55 @@
+# apps/api/wrangler.toml
+name = "leadpulse-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# ── Queue Bindings ─────────────────────────────────────────────
+[[queues.producers]]
+binding = "SIGNAL_QUEUE"
+queue = "leadpulse-signal-processing"
+
+[[queues.producers]]
+binding = "ENRICHMENT_QUEUE"
+queue = "leadpulse-enrichment"
+
+[[queues.producers]]
+binding = "CRM_SYNC_QUEUE"
+queue = "leadpulse-crm-sync"
+
+[[queues.consumers]]
+queue = "leadpulse-signal-processing"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "leadpulse-dead-letter"
+
+[[queues.consumers]]
+queue = "leadpulse-enrichment"
+max_batch_size = 5
+max_batch_timeout = 10
+max_retries = 3
+
+[[queues.consumers]]
+queue = "leadpulse-crm-sync"
+max_batch_size = 3
+max_batch_timeout = 30
+max_retries = 3
+
+# ── R2 Storage ─────────────────────────────────────────────────
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "leadpulse-storage"
+
+# ── Scheduled Triggers (Signal Polling) ───────────────────────
+[triggers]
+crons = ["*/30 * * * *"]
+
+# ── Dev Environment ────────────────────────────────────────────
+[env.development]
+vars = { NODE_ENV = "development" }
+
+# ── Production Environment ─────────────────────────────────────
+[env.production]
+vars = { NODE_ENV = "production" }
