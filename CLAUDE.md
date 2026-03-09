@@ -204,28 +204,40 @@ Every session, in order:
 ```
 Last Updated:    March 2026
 Current Phase:   Phase 1 — MVP
-Current Sprint:  Sprint 0 — Project Scaffold
+Current Sprint:  Sprint 2 — Signal Collection
 
-Sprint 0 Status: NOT STARTED — No code has been written yet.
+Sprint 1 Status: ✅ COMPLETE (commit ec20874)
+Sprint 0 Status: ✅ COMPLETE
 
-What exists:
-  - Documentation only (this file + 5 other .md files)
-  - No monorepo, no code, no deployments
+Sprint 1 completed tasks:
+  S1-T1 ✅ DB migration generated (apps/api/src/db/migrations/0000_initial-schema.sql)
+           13 tables. NOTE: db:migrate needs real Neon DATABASE_URL in .dev.vars to run.
+  S1-T2 ✅ auth.middleware.ts + rate-limit.middleware.ts + cors.middleware.ts
+           17 total tests, all pass.
+  S1-T3 ✅ campaign.service.ts + campaigns.handler.ts + campaigns.routes.ts
+           Full CRUD; delete = soft delete (status: 'archived').
+  S1-T4 ✅ user.service.ts + auth.routes.ts
+           POST /api/v1/auth/login (upsert) + GET /api/v1/auth/me. index.ts updated.
+  S1-T5 ✅ apps/web/src/lib/auth.ts — signInWithGoogle() now calls POST /api/v1/auth/login
+           apps/web/src/routes/login.tsx — navigates to /dashboard after sign-in
 
-First task:
-  - S0-T1: Create Turborepo monorepo root structure
-  - See SPRINT_PLAN.md → Sprint 0 for complete task list
+Completed sprints: Sprint 0, Sprint 1
 
-Completed sprints: None
+Sprint 1 known issues / pending:
+  - db:migrate hasn't run against real Neon DB (placeholder DATABASE_URL in .dev.vars)
+  - Need real FIREBASE_WEB_API_KEY and UPSTASH_* values in .dev.vars for local dev
+  - No E2E tests yet (Playwright) — deferred to post-MVP
 
-Known issues: None
+Next sprint (Sprint 2 — Signal Collection):
+  See SPRINT_PLAN.md → Sprint 2 for task list
+  Key tasks: Reddit OAuth2, search service, signal queue, deduplication, lead records
+  Start with S2-T1: Reddit OAuth2 + search endpoints
 
 Notes for next session:
-  - Start with S0-T1 (monorepo root)
-  - Read INFRASTRUCTURE.md before creating wrangler.toml
-  - Use CODING_PATTERNS.md for every service you write
-  - The .github/copilot-instructions.md file must be created as
-    part of Sprint 0 setup — copy from the file in this repo root
+  - Read CODING_PATTERNS.md before writing any new services
+  - Keep all services returning Result<T, AppError> (neverthrow)
+  - Cloudflare Queues binding required for S2-T3 (signal-queue producer)
+  - Add REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET to wrangler.toml [vars] section
 ```
 
 ---
