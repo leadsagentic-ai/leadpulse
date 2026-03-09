@@ -1,8 +1,9 @@
 import ky from 'ky'
 import { getIdToken } from '@/lib/auth'
 
+// Base ky instance — automatically attaches Firebase JWT to every request
 export const apiClient = ky.create({
-  prefixUrl: import.meta.env['VITE_API_URL'] ?? 'http://localhost:8787',
+  prefixUrl: import.meta.env['VITE_API_URL'] as string ?? 'http://localhost:8787',
   timeout: 30_000,
   hooks: {
     beforeRequest: [

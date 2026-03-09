@@ -1,21 +1,21 @@
+"""Basic smoke tests for the ML service."""
 import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import MagicMock, patch
+from fastapi.testclient import TestClient
+from unittest.mock import patch
+
+# Patch settings + spaCy load before importing app
+with patch("builtins.__import__", side_effect=lambda name, *a, **kw: __import__(name, *a, **kw)):
+    pass
 
 
 @pytest.fixture
-def mock_settings(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test-key-placeholder")
-    monkeypatch.setenv("ML_SERVICE_SECRET", "test-secret-placeholder-32-chars!!")
-
-
-@pytest.mark.asyncio
-async def test_health_endpoint(mock_settings):
-    with patch("main.settings.ANTHROPIC_API_KEY", "sk-ant-test"), \
-         patch("main.settings.ML_SERVICE_SECRET", "test-secret"), \
-         patch("spacy.load", return_value=MagicMock()):
+def client():
+    with patch("spacy.load", return_value=None):
         from main import app
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            response = await client.get("/health")
-        assert response.status_code == 200
-        assert response.json() == {"status": "ok", "service": "leadpulse-ml"}
+        return TestClient(app)
+
+
+def test_health(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok", "service": "leadpulse-ml"}

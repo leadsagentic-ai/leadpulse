@@ -9,18 +9,20 @@ import {
 import { initializeApp, getApps } from 'firebase/app'
 
 const firebaseConfig = {
-  apiKey:            import.meta.env['VITE_FIREBASE_API_KEY'],
-  authDomain:        import.meta.env['VITE_FIREBASE_AUTH_DOMAIN'],
-  projectId:         import.meta.env['VITE_FIREBASE_PROJECT_ID'],
-  storageBucket:     import.meta.env['VITE_FIREBASE_STORAGE_BUCKET'],
-  messagingSenderId: import.meta.env['VITE_FIREBASE_MESSAGING_SENDER_ID'],
-  appId:             import.meta.env['VITE_FIREBASE_APP_ID'],
-} as const
+  apiKey:            import.meta.env['VITE_FIREBASE_API_KEY'] as string,
+  authDomain:        import.meta.env['VITE_FIREBASE_AUTH_DOMAIN'] as string,
+  projectId:         import.meta.env['VITE_FIREBASE_PROJECT_ID'] as string,
+  storageBucket:     import.meta.env['VITE_FIREBASE_STORAGE_BUCKET'] as string,
+  messagingSenderId: import.meta.env['VITE_FIREBASE_MESSAGING_SENDER_ID'] as string,
+  appId:             import.meta.env['VITE_FIREBASE_APP_ID'] as string,
+}
 
-// Avoid re-initializing in HMR
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]!
+// Prevent duplicate app init during HMR
+const firebaseApp = getApps().length === 0
+  ? initializeApp(firebaseConfig)
+  : getApps()[0]!
 
-export const auth = getAuth(app)
+export const auth = getAuth(firebaseApp)
 
 export async function signInWithGoogle(): Promise<User> {
   const provider = new GoogleAuthProvider()
@@ -28,7 +30,7 @@ export async function signInWithGoogle(): Promise<User> {
   return result.user
 }
 
-// Returns fresh Firebase JWT — attach as Authorization: Bearer {token}
+// Returns a fresh JWT to attach to API requests
 export async function getIdToken(): Promise<string | null> {
   return auth.currentUser?.getIdToken() ?? null
 }
@@ -37,6 +39,4 @@ export async function signOut(): Promise<void> {
   await firebaseSignOut(auth)
 }
 
-export function onAuthChange(callback: (user: User | null) => void): () => void {
-  return onAuthStateChanged(auth, callback)
-}
+export { onAuthStateChanged, type User }

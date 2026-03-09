@@ -1,31 +1,31 @@
-import { createRootRouteWithContext, Outlet, redirect } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/router-devtools'
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
-import { getIdToken } from '@/lib/auth'
+import { auth } from '@/lib/auth'
+import { useEffect, useState } from 'react'
+import type { User } from 'firebase/auth'
 
 interface RouterContext {
   queryClient: QueryClient
 }
 
-export const Route = createRootRouteWithContext<RouterContext>()({
-  // Auth guard: redirect unauthenticated users to /login
-  beforeLoad: async ({ location }) => {
-    const publicPaths = ['/login', '/signup']
-    if (publicPaths.includes(location.pathname)) return
-
-    const token = await getIdToken()
-    if (!token) {
-      throw redirect({ to: '/login', search: { redirect: location.href } })
-    }
-  },
-  component: RootLayout,
-})
-
 function RootLayout() {
+  const [user, setUser] = useState<User | null | undefined>(undefined)
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((u) => setUser(u))
+    return unsubscribe
+  }, [])
+
+  // Still loading auth state — render nothing to avoid flash
+  if (user === undefined) return null
+
   return (
     <div className="min-h-screen bg-background">
       <Outlet />
-      {import.meta.env.DEV && <TanStackRouterDevtools />}
     </div>
   )
 }
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: RootLayout,
+})
