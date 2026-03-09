@@ -204,45 +204,42 @@ Every session, in order:
 ```
 Last Updated:    March 2026
 Current Phase:   Phase 1 — MVP
-Current Sprint:  Sprint 3 — Multi-Platform Signals
+Current Sprint:  Sprint 4 — Intent Classification Engine
 
+Sprint 3 Status: ✅ COMPLETE (commit 3e07cd7)
 Sprint 2 Status: ✅ COMPLETE (commit 8ad90f8)
 Sprint 1 Status: ✅ COMPLETE (commit ec20874)
 Sprint 0 Status: ✅ COMPLETE
 
-Sprint 2 completed tasks:
-  S2-T1 ✅ reddit.service.ts — OAuth2 token (btoa Basic auth) + searchRedditPosts with Upstash rate limit
-           RedditPost interface: id, title, selftext, url, author, created_utc, score, num_comments, subreddit, permalink
-  S2-T2 ✅ deduplication.service.ts (isDuplicate + markAsSeen, 7-day TTL, key: leadpulse:dedup:{url})
-           signal-processing.queue.ts — SignalProcessingMessage interface + handleSignalQueue consumer
-  S2-T3 ✅ signal-poller.ts — scheduled worker, polls all active Reddit campaigns every 30 min
-           index.ts — updated to export { fetch, scheduled, queue } (Cloudflare Workers 3-export pattern)
-  S2-T4 ✅ lead.service.ts (createLeadFromSignal, getLeadById, listLeads, patchLeadStatus)
-           leads.handler.ts + leads.routes.ts — GET /leads, GET /leads/:id, PATCH /leads/:id/status
+Sprint 3 completed tasks:
+  S3-T1 ✅ bluesky.service.ts — public AT Protocol search (app.bsky.feed.searchPosts), no auth needed
+           URL built from AT URI: at://did:plc:xxx/app.bsky.feed.post/rkey → bsky.app/profile/{handle}/post/{rkey}
+  S3-T2 ✅ threads.service.ts — Meta Threads Graph API keyword_search, requires THREADS_ACCESS_TOKEN
+           Per-user tokens: stored in integrations table (Sprint 6 OAuth connect flow will populate)
+  S3-T3 ✅ mastodon.service.ts — public mastodon.social /api/v2/search, HTML stripped via stripHtml()
+           Configurable instance URL (defaults to mastodon.social)
+  S3-T4 ✅ signal-orchestrator.service.ts — pollPlatformsForCampaign() dispatches to all platforms in parallel
+           signal-poller.ts refactored to delegate per-campaign polling to orchestrator (much cleaner)
 
-Sprint 2 notes:
-  - Lead records created with stub classification: intentType='BUYING_INTENT', confidence='0.000'
-    Sprint 4 will wire real AI classification before lead creation
-  - DB migration (0000_initial-schema.sql) applied to Neon DB in pre-Sprint-2 setup
-  - 36 tests passing, typecheck clean
+Sprint 3 notes:
+  - 61 tests passing, typecheck clean
+  - All 4 Phase 1 platforms now monitored: reddit, bluesky, threads, mastodon
+  - THREADS_ACCESS_TOKEN added to wrangler.toml dev vars, .dev.vars, index.ts HonoEnv bindings
+  - Orchestrator uses Promise.allSettled — platform failure doesn't block other platforms
 
-Completed sprints: Sprint 0, Sprint 1, Sprint 2
+Completed sprints: Sprint 0, Sprint 1, Sprint 2, Sprint 3
 
-Sprint 2 known issues / pending:
-  - Need real REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET in .dev.vars for local testing
-  - Lead classification is stub (Sprint 4 will replace with Cloudflare AI)
-  - No E2E tests yet (Playwright) — deferred to post-MVP
-
-Next sprint (Sprint 3 — Multi-Platform Signals):
-  See SPRINT_PLAN.md → Sprint 3 for task list
-  Key tasks: Bluesky signal service, Threads signal service, Mastodon signal service
-  Start with S3-T1: Bluesky AT Protocol search
+Next sprint (Sprint 4 — Intent Classification Engine):
+  See SPRINT_PLAN.md → Sprint 4 for task list
+  Key tasks: ML service intent classifier (Claude Haiku), intent orchestrator in API, wire into signal queue
+  Start with S4-T1: Complete apps/ml/src/intent/classifier.py
 
 Notes for next session:
-  - Read CODING_PATTERNS.md before writing any new services
-  - Keep all services returning Result<T, AppError> (neverthrow)
-  - Mirror the reddit.service.ts pattern for all new platform services
-  - Platform services go in apps/api/src/services/signals/
+  - Read CODING_PATTERNS.md Pattern 9 before touching apps/ml/
+  - ML service is FastAPI + Python (apps/ml/) — not Cloudflare Workers
+  - Sprint 4 stub leads (intentType='BUYING_INTENT', confidence=0.000) will be replaced by real classification
+  - Intent confidence < 0.5 → discard (don't create lead record)
+  - Intent confidence ≥ 0.5 → create lead with real classification
 ```
 
 ---
