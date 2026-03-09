@@ -4,6 +4,7 @@ import { leads } from '@/db/schema/leads.schema'
 import type { Lead, NewLead } from '@/db/schema/leads.schema'
 import type { Database } from '@/db'
 import type { SignalProcessingMessage } from '@/queues/signal-processing.queue'
+import type { IntentResult } from '@/services/intent/intent-orchestrator.service'
 import { AppError, NotFoundError, ForbiddenError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
 
@@ -17,11 +18,12 @@ export interface LeadListFilters {
 
 /**
  * Creates a lead record from a raw signal queued by the poller.
- * Sprint 2: intent fields are stubs — Sprint 4 will add real classification.
+ * Sprint 4: accepts real IntentResult from the ML classifier when available.
  */
 export async function createLeadFromSignal(
   db: Database,
   signal: SignalProcessingMessage,
+  intent?: IntentResult,
 ): Promise<Result<Lead, AppError>> {
   logger.info(
     { campaignId: signal.campaignId, platform: signal.platform, author: signal.authorUsername },
@@ -38,12 +40,12 @@ export async function createLeadFromSignal(
     postEngagement:     signal.postEngagement,
     username:           signal.authorUsername,
     platformProfileUrl: signal.platformProfileUrl,
-    // Stub classification — will be updated by Sprint 4 intent classifier
-    intentType:           'BUYING_INTENT',
-    intentConfidence:     '0.000',
-    intentJustification:  'Pending classification',
-    urgencyScore:         '0.000',
-    personaMatchScore:    '0.000',
+    // Real classification from ML service (Sprint 4), or fallback stubs
+    intentType:          intent?.intentType          ?? 'BUYING_INTENT',
+    intentConfidence:    intent?.confidence.toFixed(3)    ?? '0.000',
+    intentJustification: intent?.justification       ?? 'Pending classification',
+    urgencyScore:        intent?.urgencyScore.toFixed(3)  ?? '0.000',
+    personaMatchScore:   '0.000',
     // Default score — updated by Sprint 5 scorer
     leadScore:  0,
     scoreTier:  'WEAK',
