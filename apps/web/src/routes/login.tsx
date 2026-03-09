@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { signInWithGoogle } from '@/lib/auth'
 import { useState } from 'react'
 
@@ -7,6 +7,7 @@ export const Route = createFileRoute('/login')({
 })
 
 function LoginPage() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -15,7 +16,7 @@ function LoginPage() {
     setError(null)
     try {
       await signInWithGoogle()
-      // Router will redirect after auth state updates
+      await navigate({ to: '/dashboard' })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign in failed')
     } finally {

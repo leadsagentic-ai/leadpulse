@@ -7,6 +7,7 @@ import {
   type User,
 } from 'firebase/auth'
 import { initializeApp, getApps } from 'firebase/app'
+import ky from 'ky'
 
 const firebaseConfig = {
   apiKey:            import.meta.env['VITE_FIREBASE_API_KEY'] as string,
@@ -27,7 +28,18 @@ export const auth = getAuth(firebaseApp)
 export async function signInWithGoogle(): Promise<User> {
   const provider = new GoogleAuthProvider()
   const result = await signInWithPopup(auth, provider)
-  return result.user
+  const user = result.user
+
+  // Call the API to upsert the user in our DB on first login
+  const token = await user.getIdToken()
+  const apiUrl = import.meta.env['VITE_API_URL'] as string ?? 'http://localhost:8787'
+  await ky.post(`${apiUrl}/api/v1/auth/login`, {
+    json: { fullName: user.displayName ?? user.email ?? 'Unknown' },
+    headers: { Authorization: `Bearer ${token}` },
+    throwHttpErrors: false, // don't crash the sign-in flow for transient API errors
+  })
+
+  return user
 }
 
 // Returns a fresh JWT to attach to API requests

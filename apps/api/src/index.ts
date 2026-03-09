@@ -3,6 +3,8 @@ import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 import { logger as honoLogger } from 'hono/logger'
 import { logger } from '@/lib/logger'
+import { campaignRoutes } from '@/routes/campaigns.routes'
+import { authRoutes } from '@/routes/auth.routes'
 
 type HonoEnv = {
   Bindings: {
@@ -44,6 +46,10 @@ app.use('*', honoLogger())
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// API routes
+app.route('/api/v1/auth',      authRoutes)
+app.route('/api/v1/campaigns', campaignRoutes)
 
 // 404 handler
 app.notFound((c) =>
