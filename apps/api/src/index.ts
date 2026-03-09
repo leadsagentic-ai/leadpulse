@@ -5,6 +5,9 @@ import { logger as honoLogger } from 'hono/logger'
 import { logger } from '@/lib/logger'
 import { campaignRoutes } from '@/routes/campaigns.routes'
 import { authRoutes } from '@/routes/auth.routes'
+import { leadsRoutes } from '@/routes/leads.routes'
+import { runSignalPoller } from '@/scheduled/signal-poller'
+import { handleSignalQueue, type SignalProcessingMessage } from '@/queues/signal-processing.queue'
 
 type HonoEnv = {
   Bindings: {
@@ -21,7 +24,10 @@ type HonoEnv = {
     FRONTEND_URL: string
     ENCRYPTION_KEY: string
     NODE_ENV: string
-    SIGNAL_QUEUE: Queue
+    REDDIT_CLIENT_ID: string
+    REDDIT_CLIENT_SECRET: string
+    REDDIT_USER_AGENT: string
+    SIGNAL_QUEUE: Queue<SignalProcessingMessage>
     ENRICHMENT_QUEUE: Queue
     CRM_SYNC_QUEUE: Queue
     STORAGE: R2Bucket
@@ -50,6 +56,7 @@ app.get('/health', (c) => {
 // API routes
 app.route('/api/v1/auth',      authRoutes)
 app.route('/api/v1/campaigns', campaignRoutes)
+app.route('/api/v1/leads',     leadsRoutes)
 
 // 404 handler
 app.notFound((c) =>
@@ -65,4 +72,16 @@ app.onError((err, c) => {
   )
 })
 
-export default app
+// Cloudflare Workers exports — fetch (HTTP), scheduled (cron), queue (queue consumer)
+export default {
+  fetch: app.fetch,
+  async scheduled(event: ScheduledEvent, env: HonoEnv['Bindings'], ctx: ExecutionContext) {
+    ctx.waitUntil(runSignalPoller(event, env))
+  },
+  async queue(
+    batch: MessageBatch<SignalProcessingMessage>,
+    env: HonoEnv['Bindings'],
+  ) {
+    await handleSignalQueue(batch, env)
+  },
+}
