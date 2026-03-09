@@ -48,7 +48,7 @@ crons = ["*/30 * * * *"]
 
 # ── Dev Environment ────────────────────────────────────────────
 [env.development]
-vars = { NODE_ENV = "development", REDDIT_USER_AGENT = "LeadPulse/1.0 (by /u/leadpulse_bot)" }
+vars = { NODE_ENV = "development", REDDIT_USER_AGENT = "LeadPulse/1.0 (by /u/leadpulse_bot)", THREADS_ACCESS_TOKEN = "" }
 
 # ── Production Environment ─────────────────────────────────────
 [env.production]

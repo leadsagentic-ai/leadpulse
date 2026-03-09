@@ -27,6 +27,7 @@ type HonoEnv = {
     REDDIT_CLIENT_ID: string
     REDDIT_CLIENT_SECRET: string
     REDDIT_USER_AGENT: string
+    THREADS_ACCESS_TOKEN: string
     SIGNAL_QUEUE: Queue<SignalProcessingMessage>
     ENRICHMENT_QUEUE: Queue
     CRM_SYNC_QUEUE: Queue
