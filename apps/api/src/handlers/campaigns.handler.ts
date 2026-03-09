@@ -14,7 +14,8 @@ export async function listCampaigns(c: Context<Env>) {
   const status = c.req.query('status') as 'active' | 'paused' | 'archived' | undefined
 
   const db = createDb(c.env.DATABASE_URL)
-  const result = await campaignService.listCampaigns(db, userId, { page, limit, status })
+  const filters = { page, limit, ...(status !== undefined ? { status } : {}) }
+  const result = await campaignService.listCampaigns(db, userId, filters)
 
   if (result.isErr()) {
     return c.json({ success: false, error: result.error.toJSON() }, result.error.statusCode as 500)
@@ -44,7 +45,7 @@ export async function createCampaign(c: Context<Env>) {
 
 export async function getCampaign(c: Context<Env>) {
   const userId = c.get('userId')
-  const id = c.req.param('id')
+  const id = c.req.param('id')!
 
   const db = createDb(c.env.DATABASE_URL)
   const result = await campaignService.getCampaignById(db, userId, id)
@@ -58,7 +59,7 @@ export async function getCampaign(c: Context<Env>) {
 
 export async function updateCampaign(c: Context<Env>) {
   const userId = c.get('userId')
-  const id = c.req.param('id')
+  const id = c.req.param('id')!
   const input = c.req.valid('json' as never)
 
   const db = createDb(c.env.DATABASE_URL)
@@ -73,7 +74,7 @@ export async function updateCampaign(c: Context<Env>) {
 
 export async function patchCampaignStatus(c: Context<Env>) {
   const userId = c.get('userId')
-  const id = c.req.param('id')
+  const id = c.req.param('id')!
   const { status } = c.req.valid('json' as never) as { status: 'active' | 'paused' }
 
   const db = createDb(c.env.DATABASE_URL)
@@ -88,7 +89,7 @@ export async function patchCampaignStatus(c: Context<Env>) {
 
 export async function deleteCampaign(c: Context<Env>) {
   const userId = c.get('userId')
-  const id = c.req.param('id')
+  const id = c.req.param('id')!
 
   const db = createDb(c.env.DATABASE_URL)
   const result = await campaignService.deleteCampaign(db, userId, id)
@@ -102,7 +103,7 @@ export async function deleteCampaign(c: Context<Env>) {
 
 export async function getCampaignAnalytics(c: Context<Env>) {
   const userId = c.get('userId')
-  const id = c.req.param('id')
+  const id = c.req.param('id')!
 
   const db = createDb(c.env.DATABASE_URL)
   const result = await campaignService.getCampaignById(db, userId, id)

@@ -45,8 +45,15 @@ export const authMiddleware = createMiddleware<{
   }
 
   const user = data.users[0]
+  if (!user) {
+    return c.json(
+      { success: false, error: { code: 'UNAUTHORIZED', message: 'User not found' } },
+      401,
+    )
+  }
+
   c.set('userId', user.localId)
   c.set('userEmail', user.email ?? '')
 
-  await next()
+  return await next()
 })

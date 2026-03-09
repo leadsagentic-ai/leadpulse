@@ -43,6 +43,6 @@ export function rateLimitMiddleware(options: RateLimitOptions) {
       )
     }
 
-    await next()
+    return await next()
   })
 }

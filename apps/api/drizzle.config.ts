@@ -1,7 +1,7 @@
 import { defineConfig } from 'drizzle-kit'
 import { config } from 'dotenv'
 
-config({ path: '.dev.vars' })
+config({ path: '.dev.vars', override: true })
 
 export default defineConfig({
   schema:  './src/db/schema/index.ts',
