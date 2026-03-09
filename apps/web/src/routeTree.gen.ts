@@ -9,6 +9,32 @@
 
 import { createFileRoute, createRootRouteWithContext } from '@tanstack/react-router'
 
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexImport
+      parentRoute: typeof import('./routes/__root').Route
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
+      parentRoute: typeof import('./routes/__root').Route
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardImport
+      parentRoute: typeof import('./routes/__root').Route
+    }
+  }
+}
+
 import { Route as rootImport } from './routes/__root'
 import { Route as IndexImport } from './routes/index'
 import { Route as LoginImport } from './routes/login'
