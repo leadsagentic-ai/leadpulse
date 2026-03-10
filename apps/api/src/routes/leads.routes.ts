@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import { rateLimitMiddleware } from '@/middleware/rate-limit.middleware'
 import * as handler from '@/handlers/leads.handler'
+import * as exportHandler from '@/handlers/leads-export.handler'
 
 const PatchLeadStatusSchema = z.object({
   status: z.enum(['approved', 'discarded', 'pushed_crm']),
@@ -12,6 +13,8 @@ const PatchLeadStatusSchema = z.object({
 export const leadsRoutes = new Hono()
   .use('*', authMiddleware)
   .use('*', rateLimitMiddleware({ limit: 100, window: 60 }))
-  .get('/',        handler.listLeads)
-  .get('/:id',     handler.getLead)
+  .get('/',                          handler.listLeads)
+  .post('/export',                   exportHandler.exportLeads)
+  .get('/exports/:key',              exportHandler.downloadExport)
+  .get('/:id',                       handler.getLead)
   .patch('/:id/status', zValidator('json', PatchLeadStatusSchema), handler.patchLeadStatus)

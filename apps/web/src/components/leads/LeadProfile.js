@@ -1,0 +1,49 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Suspense } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { ArrowLeft, ExternalLink, Mail, Phone, Linkedin, Building2, MapPin, ShieldCheck } from 'lucide-react';
+import { leadDetailQueryOptions, useUpdateLeadStatus } from '@/lib/queries/leads.queries';
+import { LeadProfileSkeleton } from '@/components/shared/Skeletons';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+const TIER_STYLES = {
+    HOT: 'bg-red-100 text-red-700',
+    WARM: 'bg-orange-100 text-orange-700',
+    COOL: 'bg-blue-100 text-blue-700',
+    WEAK: 'bg-gray-100 text-gray-600',
+    DISCARD: 'bg-gray-100 text-gray-400',
+};
+const INTENT_LABELS = {
+    BUYING_INTENT: 'Buying Intent',
+    PAIN_SIGNAL: 'Pain Signal',
+    COMPARISON_INTENT: 'Comparing Solutions',
+    HIRING_INTENT: 'Hiring Intent',
+    ANNOUNCEMENT_INTENT: 'Announcement',
+};
+function ConfidenceBar({ value }) {
+    const pct = Math.round(parseFloat(value) * 100);
+    return (_jsxs("div", { className: "flex items-center gap-3", children: [_jsx("div", { className: "h-2 flex-1 overflow-hidden rounded-full bg-muted", children: _jsx("div", { className: "h-full rounded-full bg-primary transition-all", style: { width: `${pct}%` } }) }), _jsxs("span", { className: "w-9 text-right text-xs font-medium text-foreground", children: [pct, "%"] })] }));
+}
+function ScoreRow({ label, value }) {
+    return (_jsxs("tr", { className: "border-t border-border", children: [_jsx("td", { className: "py-2 pr-4 text-sm text-muted-foreground", children: label }), _jsx("td", { className: "py-2 text-sm font-medium text-foreground", children: value })] }));
+}
+function InfoItem({ icon: Icon, label, value, href, }) {
+    if (!value)
+        return null;
+    return (_jsxs("div", { className: "flex items-center gap-2 text-sm", children: [Icon && _jsx(Icon, { className: "h-4 w-4 shrink-0 text-muted-foreground" }), _jsxs("span", { className: "text-muted-foreground", children: [label, ":"] }), href ? (_jsx("a", { href: href, target: "_blank", rel: "noreferrer", className: "text-primary hover:underline", children: value })) : (_jsx("span", { className: "text-foreground", children: value }))] }));
+}
+function LeadProfileContent({ leadId }) {
+    const { data } = useSuspenseQuery(leadDetailQueryOptions(leadId));
+    const { mutate: updateStatus, isPending } = useUpdateLeadStatus();
+    const lead = data.data;
+    const tierStyle = TIER_STYLES[lead.scoreTier] ?? '';
+    const intentLabel = INTENT_LABELS[lead.intentType] ?? lead.intentType;
+    const pct = Math.round(parseFloat(lead.intentConfidence) * 100);
+    return (_jsxs("div", { className: "max-w-3xl space-y-6", children: [_jsx("div", { className: "flex items-center gap-3", children: _jsxs(Link, { to: "/leads", className: "flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground", children: [_jsx(ArrowLeft, { className: "h-4 w-4" }), " Leads"] }) }), _jsxs("div", { className: "flex items-start justify-between gap-4", children: [_jsxs("div", { children: [_jsx("h1", { className: "text-2xl font-bold text-foreground", children: lead.name ?? lead.username }), lead.jobTitle && (_jsxs("p", { className: "mt-0.5 text-sm text-muted-foreground", children: [lead.jobTitle, lead.company ? ` · ${lead.company}` : ''] }))] }), _jsxs("div", { className: `flex flex-col items-center rounded-xl px-4 py-2.5 ${tierStyle}`, children: [_jsx("span", { className: "text-2xl font-bold leading-none", children: lead.leadScore }), _jsx("span", { className: "mt-0.5 text-xs font-semibold uppercase tracking-wide", children: lead.scoreTier })] })] }), lead.status === 'pending' && (_jsxs("div", { className: "flex gap-2", children: [_jsx("button", { type: "button", disabled: isPending, onClick: () => updateStatus({ leadId: lead.id, status: 'approved' }), className: "rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50", children: "Approve" }), _jsx("button", { type: "button", disabled: isPending, onClick: () => updateStatus({ leadId: lead.id, status: 'discarded' }), className: "rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted disabled:opacity-50", children: "Discard" })] })), lead.status !== 'pending' && (_jsx("div", { className: "flex items-center gap-2", children: _jsx("span", { className: `rounded-full px-3 py-1 text-sm font-medium ${lead.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        lead.status === 'discarded' ? 'bg-gray-100 text-gray-500' :
+                            'bg-purple-100 text-purple-800'}`, children: lead.status }) })), _jsxs("section", { className: "rounded-xl border border-border bg-card p-5", children: [_jsxs("div", { className: "mb-3 flex items-center justify-between", children: [_jsx("h2", { className: "font-semibold text-foreground", children: "Original Post" }), _jsxs("a", { href: lead.postUrl, target: "_blank", rel: "noreferrer", className: "flex items-center gap-1 text-xs text-primary hover:underline", children: ["View on ", lead.platform, " ", _jsx(ExternalLink, { className: "h-3 w-3" })] })] }), _jsx("p", { className: "text-sm leading-relaxed text-foreground/80", children: lead.postText }), lead.postPublishedAt && (_jsxs("p", { className: "mt-2 text-xs text-muted-foreground", children: ["Posted ", new Date(lead.postPublishedAt).toLocaleDateString(), " \u00B7 ", lead.postEngagement, " engagements"] }))] }), _jsxs("section", { className: "rounded-xl border border-border bg-card p-5", children: [_jsx("h2", { className: "mb-4 font-semibold text-foreground", children: "AI Intent Analysis" }), _jsxs("div", { className: "space-y-3", children: [_jsx("div", { className: "flex items-center gap-3", children: _jsx("span", { className: "rounded-md bg-indigo-50 px-2.5 py-1 text-sm font-medium text-indigo-700", children: intentLabel }) }), _jsxs("div", { children: [_jsxs("div", { className: "mb-1 flex items-center justify-between text-xs text-muted-foreground", children: [_jsx("span", { children: "Intent Confidence" }), _jsxs("span", { children: [pct, "%"] })] }), _jsx(ConfidenceBar, { value: lead.intentConfidence })] }), _jsxs("div", { children: [_jsx("div", { className: "mb-1 text-xs text-muted-foreground", children: "Urgency Score" }), _jsx(ConfidenceBar, { value: lead.urgencyScore })] }), lead.intentJustification && (_jsxs("p", { className: "rounded-lg bg-muted px-3 py-2 text-sm italic text-muted-foreground", children: ["\"", lead.intentJustification, "\""] }))] })] }), _jsxs("section", { className: "rounded-xl border border-border bg-card p-5", children: [_jsx("h2", { className: "mb-4 font-semibold text-foreground", children: "Contact Information" }), _jsxs("div", { className: "space-y-2", children: [_jsx(InfoItem, { icon: Mail, label: "Email", value: lead.email, href: lead.email ? `mailto:${lead.email}` : undefined }), lead.emailStatus && (_jsxs("div", { className: "ml-6 text-xs text-muted-foreground", children: ["Status: ", _jsx("span", { className: lead.emailStatus === 'VALID' ? 'text-green-700' : 'text-yellow-700', children: lead.emailStatus })] })), _jsx(InfoItem, { icon: Phone, label: "Phone", value: lead.phone }), _jsx(InfoItem, { icon: Linkedin, label: "LinkedIn", value: lead.linkedinUrl, href: lead.linkedinUrl ?? undefined }), _jsx(InfoItem, { icon: Building2, label: "Company", value: lead.company }), _jsx(InfoItem, { icon: MapPin, label: "Location", value: lead.location }), lead.industry && _jsx(InfoItem, { label: "Industry", value: lead.industry }), lead.companySize && _jsx(InfoItem, { label: "Company Size", value: lead.companySize }), lead.platformProfileUrl && (_jsx(InfoItem, { label: "Profile", value: lead.username, href: lead.platformProfileUrl }))] }), lead.enrichedAt && (_jsxs("p", { className: "mt-3 text-xs text-muted-foreground", children: ["Enriched ", new Date(lead.enrichedAt).toLocaleDateString()] }))] }), _jsxs("section", { className: "rounded-xl border border-border bg-card p-5", children: [_jsx("h2", { className: "mb-4 font-semibold text-foreground", children: "Score Breakdown" }), _jsx("table", { className: "w-full text-left", children: _jsxs("tbody", { children: [_jsx(ScoreRow, { label: "Intent Confidence", value: `${pct}%` }), _jsx(ScoreRow, { label: "Urgency", value: `${Math.round(parseFloat(lead.urgencyScore) * 100)}%` }), _jsx(ScoreRow, { label: "Persona Match", value: `${Math.round(parseFloat(lead.personaMatchScore) * 100)}%` }), _jsx(ScoreRow, { label: "Score Tier", value: lead.scoreTier }), _jsx(ScoreRow, { label: "Total Score", value: lead.leadScore })] }) })] }), _jsxs("section", { className: "rounded-xl border border-border bg-card p-5", children: [_jsx("h2", { className: "mb-4 font-semibold text-foreground", children: "Compliance" }), _jsxs("div", { className: "flex gap-4", children: [_jsxs("div", { className: `flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${lead.complianceGdprSafe ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`, children: [_jsx(ShieldCheck, { className: "h-4 w-4" }), "GDPR ", lead.complianceGdprSafe ? 'Safe' : 'Not Safe'] }), _jsxs("div", { className: `flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${lead.complianceDpdpSafe ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`, children: [_jsx(ShieldCheck, { className: "h-4 w-4" }), "DPDP ", lead.complianceDpdpSafe ? 'Safe' : 'Not Safe'] })] })] })] }));
+}
+export function LeadProfile({ leadId }) {
+    return (_jsx(ErrorBoundary, { fallback: _jsx("p", { className: "text-sm text-destructive", children: "Failed to load lead." }), children: _jsx(Suspense, { fallback: _jsx(LeadProfileSkeleton, {}), children: _jsx(LeadProfileContent, { leadId: leadId }) }) }));
+}
+//# sourceMappingURL=LeadProfile.js.map
