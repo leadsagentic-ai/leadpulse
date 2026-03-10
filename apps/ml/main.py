@@ -11,6 +11,12 @@ from src.intent.classifier import (
     classify_post_intent,
     AnthropicDep,
 )
+from src.ner.extractor import (
+    EntityExtractionRequest,
+    EntityExtractionResponse,
+    extract_entities,
+    NlpDep,
+)
 
 
 class Settings(BaseSettings):
@@ -66,3 +72,15 @@ async def classify(
     client: AnthropicDep,
 ) -> IntentClassificationResponse:
     return await classify_post_intent(request, client)
+
+
+@app.post(
+    "/extract-entities",
+    response_model=EntityExtractionResponse,
+    dependencies=[Security(verify_internal_secret)],
+)
+def extract(
+    request: EntityExtractionRequest,
+    nlp: NlpDep,
+) -> EntityExtractionResponse:
+    return extract_entities(request, nlp)

@@ -8,6 +8,7 @@ import { authRoutes } from '@/routes/auth.routes'
 import { leadsRoutes } from '@/routes/leads.routes'
 import { runSignalPoller } from '@/scheduled/signal-poller'
 import { handleSignalQueue, type SignalProcessingMessage } from '@/queues/signal-processing.queue'
+import { handleEnrichmentQueue, type EnrichmentMessage } from '@/queues/enrichment.queue'
 
 type HonoEnv = {
   Bindings: {
@@ -80,9 +81,13 @@ export default {
     ctx.waitUntil(runSignalPoller(event, env))
   },
   async queue(
-    batch: MessageBatch<SignalProcessingMessage>,
+    batch: MessageBatch,
     env: HonoEnv['Bindings'],
   ) {
-    await handleSignalQueue(batch, env)
+    if (batch.queue === 'leadpulse-signal-processing') {
+      await handleSignalQueue(batch as MessageBatch<SignalProcessingMessage>, env)
+    } else if (batch.queue === 'leadpulse-enrichment') {
+      await handleEnrichmentQueue(batch as MessageBatch<EnrichmentMessage>, env)
+    }
   },
 }
