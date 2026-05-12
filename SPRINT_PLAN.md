@@ -373,8 +373,63 @@
 
 ## PHASE 2 — CORE PRODUCT (Month 4-6, Sprints 8-13)
 
-> Full details will be added to this document before Sprint 8 begins.
-> Summary below for planning context.
+---
+
+### SPRINT 8 — Enrichment Waterfall Phase 2 (Week 14)
+
+**Goal:** Maximise contact data completeness. Phase 1 only had Hunter.io (domain → email).
+Phase 2 adds Apollo.io (person search), PDL (fallback enrichment), and Proxycurl (LinkedIn profile scrape).
+After this sprint the average lead should have email + phone + LinkedIn URL filled in.
+
+**Waterfall order (updated):**
+1. ML NER — extract name / company / location / jobTitle (existing)
+2. **Apollo.io** — person search by name + company → email, phone, LinkedIn URL, industry, company size
+3. **PDL** — if Apollo didn't find email → person enrich by name + domain
+4. **Hunter.io** — if PDL also missed → domain-only email lookup (existing, now last resort)
+5. **Proxycurl** — if any step yielded a LinkedIn URL → scrape full LinkedIn profile
+6. Score — score the fully-enriched lead (existing)
+
+No DB migration needed — all new fields (`phone`, `linkedinUrl`, `companySize`, `industry`) already exist in the `leads` table from Sprint 5.
+
+#### Tasks
+
+**S8-T1: Apollo.io Service**
+- Create `apps/api/src/services/enrichment/apollo.service.ts`
+- Use Apollo `/v1/people/match` endpoint: POST `{ name, organization_name, domain }` → returns person object
+- Extract: `email`, `phone_numbers[0].sanitized_number`, `linkedin_url`, `title` (jobTitle), `organization.industry`, `organization.estimated_num_employees`
+- Return `Result<ApolloPersonResult, AppError>` following Pattern 1
+- Log to `enrichmentLog` with `provider: 'apollo.io'`, `costInr: '5.00'` per successful match
+- Gracefully return `found: false` when no match / key absent
+
+**S8-T2: PDL (People Data Labs) Service**
+- Create `apps/api/src/services/enrichment/pdl.service.ts`
+- Use PDL `/v5/person/enrich` endpoint: GET `{ name, company, domain }` with `X-Api-Key` header
+- Extract: `email` (first from `emails[]`), `phone_numbers[0]`, `linkedin_url`, `industry`
+- Return `Result<PdlPersonResult, AppError>` following Pattern 1
+- Log to `enrichmentLog` with `provider: 'pdl'`, `costInr: '3.00'` per successful hit
+- Return `found: false` on 404 (person not in PDL)
+
+**S8-T3: Proxycurl LinkedIn Scraper Service**
+- Create `apps/api/src/services/enrichment/proxycurl.service.ts`
+- Use Proxycurl `/proxycurl/api/v2/linkedin` endpoint: GET `{ url: linkedinUrl }` with `Authorization: Bearer <key>`
+- Extract: `full_name`, `occupation` (jobTitle), `company` (most recent experience), `industry`, `country`
+- Only called when `linkedinUrl` is present after steps 1–4
+- Return `Result<ProxycurlProfileResult, AppError>` following Pattern 1
+- Log with `provider: 'proxycurl'`, `costInr: '8.00'` per credit used
+
+**S8-T4: Update Waterfall Orchestrator**
+- Update `apps/api/src/services/enrichment/waterfall-orchestrator.service.ts`
+- New waterfall: NER → Apollo → PDL (if no email) → Hunter (if still no email) → Proxycurl (if linkedinUrl)
+- Each step only called if the previous didn't satisfy the field (no wasteful double-calls)
+- Update `enrichLead()` env type to include `APOLLO_API_KEY?`, `PDL_API_KEY?`, `PROXYCURL_API_KEY?`
+- Update `apps/api/src/queues/enrichment.queue.ts` to pass the new env keys
+
+**S8-T5: Tests**
+- `apollo.service.test.ts` — mock HTTP, test: found match, no match, missing key, rate limit
+- `pdl.service.test.ts` — mock HTTP, test: found, 404 not found, missing key, 429
+- `proxycurl.service.test.ts` — mock HTTP, test: found profile, missing URL skipped, missing key
+
+---
 
 | Sprint | Focus | Key Deliverable |
 |--------|-------|----------------|

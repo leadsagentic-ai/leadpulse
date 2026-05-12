@@ -92,7 +92,7 @@ RAZORPAY_WEBHOOK_SECRET="your-razorpay-webhook-secret"
 
 # ── App Config ───────────────────────────────────────────────────
 FRONTEND_URL="http://localhost:5173"           # In prod: https://app.leadpulse.io
-ENCRYPTION_KEY="exactly-32-characters-here!!"  # For encrypting OAuth tokens in DB
+ENCRYPTION_KEY="ece2e90ab407aed3eb9b820669958fd2"  # For encrypting OAuth tokens in DB
 NODE_ENV="development"
 ```
 
@@ -129,7 +129,7 @@ RAZORPAY_KEY_ID=""
 RAZORPAY_KEY_SECRET=""
 RAZORPAY_WEBHOOK_SECRET=""
 FRONTEND_URL="http://localhost:5173"
-ENCRYPTION_KEY=""
+ENCRYPTION_KEY="ece2e90ab407aed3eb9b820669958fd2"
 NODE_ENV="development"
 ```
 

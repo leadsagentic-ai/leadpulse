@@ -20,9 +20,13 @@ export interface EnrichmentMessage {
 export async function handleEnrichmentQueue(
   batch: MessageBatch<EnrichmentMessage>,
   env: {
-    DATABASE_URL:      string
-    ML_SERVICE_URL:    string
-    ML_SERVICE_SECRET: string
+    DATABASE_URL:       string
+    ML_SERVICE_URL:     string
+    ML_SERVICE_SECRET:  string
+    HUNTER_API_KEY?:    string
+    APOLLO_API_KEY?:    string
+    PDL_API_KEY?:       string
+    PROXYCURL_API_KEY?: string
   },
 ): Promise<void> {
   const db = createDb(env.DATABASE_URL)

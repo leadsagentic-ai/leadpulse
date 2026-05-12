@@ -50,6 +50,77 @@ crons = ["*/30 * * * *"]
 [env.development]
 vars = { NODE_ENV = "development", REDDIT_USER_AGENT = "LeadPulse/1.0 (by /u/leadpulse_bot)", THREADS_ACCESS_TOKEN = "" }
 
+# Queues bindings must be repeated under each named env (not inherited from top-level)
+[[env.development.queues.producers]]
+binding = "SIGNAL_QUEUE"
+queue = "leadpulse-signal-processing"
+
+[[env.development.queues.producers]]
+binding = "ENRICHMENT_QUEUE"
+queue = "leadpulse-enrichment"
+
+[[env.development.queues.producers]]
+binding = "CRM_SYNC_QUEUE"
+queue = "leadpulse-crm-sync"
+
+[[env.development.queues.consumers]]
+queue = "leadpulse-signal-processing"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+
+[[env.development.queues.consumers]]
+queue = "leadpulse-enrichment"
+max_batch_size = 5
+max_batch_timeout = 10
+max_retries = 3
+
+[[env.development.queues.consumers]]
+queue = "leadpulse-crm-sync"
+max_batch_size = 3
+max_batch_timeout = 30
+max_retries = 3
+
+[[env.development.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "leadpulse-storage"
+
 # ── Production Environment ─────────────────────────────────────
 [env.production]
 vars = { NODE_ENV = "production" }
+
+# Queues + R2 must be repeated (not inherited from top-level)
+[[env.production.queues.producers]]
+binding = "SIGNAL_QUEUE"
+queue = "leadpulse-signal-processing"
+
+[[env.production.queues.producers]]
+binding = "ENRICHMENT_QUEUE"
+queue = "leadpulse-enrichment"
+
+[[env.production.queues.producers]]
+binding = "CRM_SYNC_QUEUE"
+queue = "leadpulse-crm-sync"
+
+[[env.production.queues.consumers]]
+queue = "leadpulse-signal-processing"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "leadpulse-dead-letter"
+
+[[env.production.queues.consumers]]
+queue = "leadpulse-enrichment"
+max_batch_size = 5
+max_batch_timeout = 10
+max_retries = 3
+
+[[env.production.queues.consumers]]
+queue = "leadpulse-crm-sync"
+max_batch_size = 3
+max_batch_timeout = 30
+max_retries = 3
+
+[[env.production.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "leadpulse-storage"

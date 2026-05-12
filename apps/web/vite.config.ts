@@ -4,9 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { resolve } from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
-    TanStackRouterVite(),
+    // Skip TanStackRouterVite during tests — it tries to generate route files
+    // which conflicts with jsdom and our mocked router
+    ...(mode !== 'test' ? [TanStackRouterVite()] : []),
     react(),
     tailwindcss(),
   ],
@@ -18,4 +20,12 @@ export default defineConfig({
   server: {
     port: 5173,
   },
-})
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    alias: {
+      '@': resolve(__dirname, './src'),
+    },
+  },
+}))

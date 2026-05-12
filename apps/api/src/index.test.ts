@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// hunter.service.ts (now reachable from index.ts) imports @/lib/env eagerly;
-// mock it so the health check test doesn't need real env vars.
+// validateWorkerEnv reads CF Worker bindings — not available in Vitest/Node.js.
+// Mock it as a no-op so the health check test runs without real env vars.
 vi.mock('@/lib/env', () => ({
-  env: { HUNTER_API_KEY: 'test-key' },
+  validateWorkerEnv: () => {},
 }))
 
-import app from './index'
+import { app } from './index'
 
 describe('GET /health', () => {
   it('returns 200 with status ok', async () => {

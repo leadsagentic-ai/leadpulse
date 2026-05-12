@@ -4,10 +4,11 @@ import { z } from 'zod'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import { createDb } from '@/db'
 import { upsertUser, getUserById } from '@/services/user.service'
+import { sendWelcomeEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
 
 type HonoEnv = {
-  Bindings: { DATABASE_URL: string; FIREBASE_WEB_API_KEY: string }
+  Bindings: { DATABASE_URL: string; FIREBASE_WEB_API_KEY: string; RESEND_API_KEY?: string }
   Variables: { userId: string; userEmail: string }
 }
 
@@ -32,6 +33,12 @@ export const authRoutes = new Hono<HonoEnv>()
         { success: false, error: result.error.toJSON() },
         result.error.statusCode as 500,
       )
+    }
+
+    // New users get a welcome email (non-blocking — fire and forget)
+    const isNewUser = result.value.lastLoginAt === null
+    if (isNewUser) {
+      void sendWelcomeEmail(c.env.RESEND_API_KEY, userEmail, fullName)
     }
 
     return c.json({ success: true, data: result.value }, 200)

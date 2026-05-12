@@ -12,9 +12,14 @@ interface RateLimitOptions {
 
 export function rateLimitMiddleware(options: RateLimitOptions) {
   return createMiddleware<{
-    Bindings: { UPSTASH_REDIS_REST_URL: string; UPSTASH_REDIS_REST_TOKEN: string }
+    Bindings: { UPSTASH_REDIS_REST_URL?: string; UPSTASH_REDIS_REST_TOKEN?: string }
     Variables: { userId: string }
   }>(async (c, next) => {
+    // Skip rate limiting in local dev when Upstash is not configured
+    if (!c.env.UPSTASH_REDIS_REST_URL || !c.env.UPSTASH_REDIS_REST_TOKEN) {
+      return await next()
+    }
+
     const redis = new Redis({
       url: c.env.UPSTASH_REDIS_REST_URL,
       token: c.env.UPSTASH_REDIS_REST_TOKEN,

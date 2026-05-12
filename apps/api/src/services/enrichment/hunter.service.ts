@@ -1,6 +1,5 @@
 import ky from 'ky'
 import { ok, err, type Result } from 'neverthrow'
-import { env } from '@/lib/env'
 import { ExternalApiError, RateLimitedError, type AppError } from '@/lib/errors'
 import { logger } from '@/lib/logger'
 
@@ -34,7 +33,13 @@ interface HunterApiResponse {
  */
 export async function findEmailByDomain(
   domain: string,
+  apiKey: string | undefined,
 ): Promise<Result<HunterEmailResult, AppError>> {
+  if (!apiKey) {
+    logger.warn({ domain }, 'Hunter API key not configured — skipping email enrichment')
+    return ok({ email: '', confidence: 0, found: false })
+  }
+
   logger.info({ domain, provider: 'hunter.io' }, 'Email enrichment started')
 
   let response: HunterApiResponse | null = null
@@ -42,7 +47,7 @@ export async function findEmailByDomain(
   try {
     response = await ky
       .get('https://api.hunter.io/v2/domain-search', {
-        searchParams: { domain, api_key: env.HUNTER_API_KEY },
+        searchParams: { domain, api_key: apiKey },
         timeout: 10_000,
         throwHttpErrors: true,
         retry: 0,

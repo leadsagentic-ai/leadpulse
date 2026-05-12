@@ -16,7 +16,7 @@ interface PollerEnv extends OrchestratorEnv {
  * which dispatches to whichever platforms each campaign is configured for.
  */
 export async function runSignalPoller(
-  scheduledEvent: ScheduledEvent,
+  scheduledEvent: ScheduledController,
   env: PollerEnv,
 ): Promise<void> {
   logger.info({ scheduledTime: scheduledEvent.scheduledTime }, 'Signal poller started')
